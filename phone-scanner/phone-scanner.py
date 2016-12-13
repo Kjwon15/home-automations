@@ -41,7 +41,7 @@ class MpdManager():
         self.host = host
         self.port = port
         self.password = password
-        self.redis = redis.StrictRedis('asakura.lan')
+        self.redis = redis.StrictRedis('asakura.lan', socket_timeout=2)
         self.logger = logging.getLogger('MpdManager')
 
         self.prev_on = True
@@ -153,13 +153,16 @@ class MpdManager():
             # subprocess.Popen(['ping', '-c1', '-W1', self.ping_target],
             #                  stdout=DEVNULL,
             #                  stderr=DEVNULL)
-            last_seen = self.redis.hget(self.redis_target, 'lastseen')
-            if last_seen:
-                last_seen = float(last_seen)
-                self.logger.debug('Redis {}'.format(last_seen))
-                return last_seen
-            else:
-                return None
+            try:
+                last_seen = self.redis.hget(self.redis_target, 'lastseen')
+                if last_seen:
+                    last_seen = float(last_seen)
+                    self.logger.debug('Redis {}'.format(last_seen))
+                    return last_seen
+            except:
+                pass
+
+            return None
 
 
 if __name__ == '__main__':
