@@ -41,7 +41,7 @@ class MpdManager():
         self.host = host
         self.port = port
         self.password = password
-        self.redis = redis.StrictRedis('asakura.lan', socket_timeout=2)
+        self.redis = redis.StrictRedis('sakura.lan', socket_timeout=2)
         self.logger = logging.getLogger('MpdManager')
 
         self.prev_on = True
@@ -112,9 +112,9 @@ class MpdManager():
 
 
         try:
-            requests.post('http://kimidori.lan:31337/switch', {'switch': 'on'})
+            requests.post('http://tsubaki.lan:31337/switch', {'switch': 'on'})
             time.sleep(0.5)
-            requests.post('http://kimidori.lan:31337/light', {
+            requests.post('http://tsubaki.lan:31337/light', {
                 'brightness': 50,
                 'warm': 0.4,
             })
@@ -130,7 +130,7 @@ class MpdManager():
 
         if self.prev_on:
             try:
-                requests.post('http://kimidori.lan:31337/switch',
+                requests.post('http://tsubaki.lan:31337/switch',
                               {'switch': 'off'})
             except Exception as e:
                 self.logger.error(str(e))
