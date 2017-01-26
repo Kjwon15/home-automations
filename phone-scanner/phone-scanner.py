@@ -116,7 +116,7 @@ class MpdManager():
             time.sleep(0.5)
             requests.post('http://tsubaki.lan:31337/light', {
                 'brightness': 50,
-                'warm': 0.4,
+                'temp': 3620,
             })
         except Exception as e:
             self.logger.error(str(e))
