@@ -97,7 +97,7 @@ class Listener():
 
 
 if __name__ == '__main__':
-    listener = Listener(host='kimidori.lan', port=6600, password='derkuchen',
-                        light_host='http://kimidori.lan:31337')
+    listener = Listener(host='tsubaki.lan', port=6600, password='derkuchen',
+                        light_host='http://tsubaki.lan:31337')
 
     listener.start()
