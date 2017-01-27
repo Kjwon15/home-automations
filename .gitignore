@@ -3,3 +3,7 @@
 *.egg-info
 
 .python-version
+
+# Supervisor
+supervisord.pid
+/logs/
