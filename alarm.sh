@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 if [ -e /tmp/snooze ]; then
     rm /tmp/snooze
     exit
@@ -6,8 +6,10 @@ fi
 # SONGNAME="OST/Simon Viklund - PAYDAY 2 Official Soundtrack/Gustaf Grefberg - PAYDAY 2 Official Soundtrack - 01 Mayhem Dressed in a Suit.mp3"
 SONGNAME="mixing/EDM/[Electro] - Noisestorm - Surge (Original Mix) [Monstercat EP Release].mp3"
 
+PASSWORD=${MPD_HOST%@*}
+
 nc localhost 6600 <<EOF >/dev/null
-password derkuchen
+password $PASSWORD
 command_list_begin
 setvol 70
 clear
