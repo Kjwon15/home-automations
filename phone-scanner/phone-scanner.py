@@ -121,6 +121,11 @@ class MpdManager():
         except Exception as e:
             self.logger.error(str(e))
 
+        try:
+            requests.put('http://omega2.lan:8000/switch/0')
+        except:
+            pass
+
     def on_disconnected(self):
         self.check_mpd_connection()
 
@@ -134,6 +139,11 @@ class MpdManager():
                               {'switch': 'off'})
             except Exception as e:
                 self.logger.error(str(e))
+
+            try:
+                requests.delete('http://omega2.lan:8000/switch/0')
+            except:
+                pass
 
     def check_alive_ping(self):
         p = subprocess.Popen(['ping', '-c1', '-W1', self.ping_target],
