@@ -6,6 +6,8 @@ fi
 
 ping -c 1 -t 1 n5x.lan || exit
 
+http put http://omega2.lan:8000/switch/0
+
 # SONGNAME="OST/Simon Viklund - PAYDAY 2 Official Soundtrack/Gustaf Grefberg - PAYDAY 2 Official Soundtrack - 01 Mayhem Dressed in a Suit.mp3"
 SONGNAME="mixing/EDM/[Electro] - Noisestorm - Surge (Original Mix) [Monstercat EP Release].mp3"
 
