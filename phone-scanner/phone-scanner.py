@@ -133,17 +133,16 @@ class MpdManager():
             self.logger.info('Stop music')
             self.mpd.stop()
 
-        if self.prev_on:
-            try:
-                requests.post('http://tsubaki.lan:31337/switch',
-                              {'switch': 'off'})
-            except Exception as e:
-                self.logger.error(str(e))
+        try:
+            requests.post('http://tsubaki.lan:31337/switch',
+                          {'switch': 'off'})
+        except Exception as e:
+            self.logger.error(str(e))
 
-            try:
-                requests.delete('http://omega2.lan:8000/switch/0')
-            except:
-                pass
+        try:
+            requests.delete('http://omega2.lan:8000/switch/0')
+        except:
+            pass
 
     def check_alive_ping(self):
         p = subprocess.Popen(['ping', '-c1', '-W1', self.ping_target],
