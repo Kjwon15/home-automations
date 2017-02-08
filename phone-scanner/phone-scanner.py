@@ -110,17 +110,6 @@ class MpdManager():
             self.mpd.play()
             self.mpd.command_list_end()
 
-
-        try:
-            requests.post('http://tsubaki.lan:31337/switch', {'switch': 'on'})
-            time.sleep(0.5)
-            requests.post('http://tsubaki.lan:31337/light', {
-                'brightness': 50,
-                'temp': 3620,
-            })
-        except Exception as e:
-            self.logger.error(str(e))
-
         try:
             requests.put('http://omega2.lan:8000/switch/0')
         except:
