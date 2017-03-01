@@ -111,7 +111,7 @@ class MpdManager():
             self.mpd.command_list_end()
 
         try:
-            requests.put('http://omega2.lan:8000/switch/0')
+            requests.put('http://omega2.lan:8000/switch/0', timeout=3)
         except:
             pass
 
@@ -124,12 +124,13 @@ class MpdManager():
 
         try:
             requests.post('http://tsubaki.lan:31337/switch',
-                          {'switch': 'off'})
+                          {'switch': 'off'},
+                          timeout=3)
         except Exception as e:
             self.logger.error(str(e))
 
         try:
-            requests.delete('http://omega2.lan:8000/switch/0')
+            requests.delete('http://omega2.lan:8000/switch/0', timeout=3)
         except:
             pass
 
