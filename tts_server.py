@@ -22,7 +22,7 @@ if not path.exists(cache_dir):
 
 def get_param(name):
     data = request.json or request.form
-    return data.get(name)
+    return data.get(name, None)
 
 
 def async(f):
@@ -34,10 +34,13 @@ def async(f):
 
 
 # @async
-def speak(msg, lang='en-us'):
-    filename = os.path.join(cache_dir, hashlib.md5(msg.encode('utf-8')).hexdigest())
+def speak(msg, lang='en-us', rate=0):
+    filename = os.path.join(
+        cache_dir,
+        hashlib.md5('{msg}:{lang}:{rate}'.format(
+            msg=msg, lang=lang, rate=rate).encode('utf-8')).hexdigest())
     if os.path.exists(filename):
-        subprocess.Popen(['mpg321', '-q', filename])#.wait()
+        subprocess.Popen(['mpg321', '-q', '-g120', filename])#.wait()
     else:
         try:
             resp = requests.post(API_URL, {
@@ -45,6 +48,7 @@ def speak(msg, lang='en-us'):
                 'src': msg,
                 'hl': lang,
                 'f': '44khz_16bit_mono',
+                'r': rate,
             })
             if resp.headers['Content-Type'].startswith('text'):
                 raise Exception('API error')
@@ -54,14 +58,15 @@ def speak(msg, lang='en-us'):
             print(e)
         else:
             print(msg)
-            subprocess.Popen(['mpg321', '-q', filename])#.wait()
+            subprocess.Popen(['mpg321', '-q', '-g120', filename])#.wait()
 
 
 @app.route('/tts', methods=['POST'])
 def tts():
     lang = get_param('lang')
     msg = get_param('msg')
+    rate = get_param('rate')
 
-    speak(msg, lang)
+    speak(msg, lang, rate)
 
     return 'OK'
