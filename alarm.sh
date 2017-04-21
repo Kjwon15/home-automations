@@ -4,6 +4,8 @@ if [ -e /tmp/snooze ]; then
     exit
 fi
 
+./check_phone.py || exit 1
+
 curl -XPUT http://omega2.lan:8000/switch/0
 
 
