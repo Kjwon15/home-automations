@@ -1,7 +1,9 @@
+import datetime
 import functools
 import hashlib
 import os
 import subprocess
+import time
 from os import path
 from multiprocessing.pool import Pool
 
@@ -33,13 +35,22 @@ def async(f):
     return wrapped
 
 
+def is_valid(filename):
+    now = time.time()
+    return (
+        os.path.exists(filename)
+        and now - os.path.getmtime(filename) <
+        datetime.timedelta(days=7).total_seconds()
+    )
+
+
 # @async
 def speak(msg, lang='en-us', rate=0):
     filename = os.path.join(
         cache_dir,
         hashlib.md5('{msg}:{lang}:{rate}'.format(
             msg=msg, lang=lang, rate=rate).encode('utf-8')).hexdigest())
-    if os.path.exists(filename):
+    if is_valid(filename):
         subprocess.Popen(['mpg321', '-q', '-g120', filename])#.wait()
     else:
         try:
