@@ -83,7 +83,7 @@ class MpdManager():
                 if not self.prev_on:
                     self.on_connected()
                     self.prev_on = True
-            else:
+            elif self.prev_on:
                 self.on_disconnected()
                 self.prev_on = False
 
