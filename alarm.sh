@@ -1,4 +1,7 @@
 #!/bin/bash
+path=`dirname $(readlink -e $0)`
+cd $path
+
 if [ -e /tmp/snooze ]; then
     rm /tmp/snooze
     exit
