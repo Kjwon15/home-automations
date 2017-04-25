@@ -59,7 +59,7 @@ class MpdManager():
     def check_mpd_connection(self):
         try:
             self.mpd.ping()
-        except ConnectionError:
+        except:
             self.connect()
 
     def run(self):
