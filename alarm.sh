@@ -10,6 +10,7 @@ fi
 ./check_phone.py || exit 1
 
 curl -s -XPUT http://omega2.lan:8000/switch/0
+curl -s -XDELETE http://tsubaki:31337/switch
 
 
 # SONGNAME="OST/Simon Viklund - PAYDAY 2 Official Soundtrack/Gustaf Grefberg - PAYDAY 2 Official Soundtrack - 01 Mayhem Dressed in a Suit.mp3"
