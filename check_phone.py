@@ -21,7 +21,7 @@ try:
         if now - last_seen < 5 * 60:
             exit(0)
 except:
-    print("Redis check failed", out=sys.stderr)
+    print("Redis check failed", file=sys.stderr)
 
 p = subprocess.Popen(
     ['ping', '-c1', '-W1', 'n5x.lan'],
