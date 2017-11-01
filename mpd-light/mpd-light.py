@@ -7,6 +7,12 @@ from io import BytesIO
 from xml.etree import ElementTree
 
 
+light_session = requests.session()
+light_session.headers.update({
+    'User-Agent': 'mpd-light',
+})
+
+
 def get_lastfm_cover(song):
     url = 'http://ws.audioscrobbler.com/2.0/'
     api_key = '7fb78a81b20bee7cb6e8fad4cbcb3694'
@@ -68,8 +74,11 @@ class Listener():
             self.client.idle('player', 'playlist')
 
     def change_color(self, color):
+        if not self._is_rgb_mode():
+            print('Not in rgb mode, skipping')
+            return
         print(color)
-        requests.post(self.light_host + "/light", {
+        light_session.post(self.light_host + "/light", {
             'rgb': color
         })
 
@@ -93,6 +102,11 @@ class Listener():
              if x in song
             ))
         return hashlib.md5(txt.encode('utf-8')).hexdigest()[:6]
+
+    def _is_rgb_mode(self):
+        resp = light_session.get(self.light_host + '/status')
+        mode = resp.json()['mode']
+        return mode == 1
 
 
 
