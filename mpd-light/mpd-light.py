@@ -1,10 +1,20 @@
 import hashlib
 import colorthief
 import mpd
+import os
+import re
 import requests
 
 from io import BytesIO
 from xml.etree import ElementTree
+
+import sys
+from os import path
+
+p = path.abspath(path.join(path.dirname(__file__), path.pardir))
+sys.path.append(p)
+
+from mpd_env import MPD_HOST, MPD_PORT, MPD_PASSWORD
 
 
 light_session = requests.session()
@@ -111,7 +121,7 @@ class Listener():
 
 
 if __name__ == '__main__':
-    listener = Listener(host='tsubaki.lan', port=6600, password='derkuchen',
+    listener = Listener(host=MPD_HOST, port=MPD_PORT, password=MPD_PASSWORD,
                         light_host='http://tsubaki.lan:31337')
 
     listener.start()

@@ -10,6 +10,14 @@ from logging.handlers import RotatingFileHandler
 
 from mpd import MPDClient, ConnectionError
 
+import sys
+from os import path
+
+p = path.abspath(path.join(path.dirname(__file__), path.pardir))
+sys.path.append(p)
+
+from mpd_env import MPD_HOST, MPD_PORT, MPD_PASSWORD
+
 try:
     from subprocess import DEVNULL
 except ImportError:
@@ -17,8 +25,8 @@ except ImportError:
     DEVNULL = open(os.devnull, 'wb')
 
 arg_parser = argparse.ArgumentParser()
-arg_parser.add_argument('--mpd-host', default='localhost')
-arg_parser.add_argument('--mpd-port', type=int, default=6600)
+arg_parser.add_argument('--mpd-host', default=None)
+arg_parser.add_argument('--mpd-port', type=int, default=None)
 arg_parser.add_argument('--mpd-password')
 arg_parser.add_argument('--interval', type=int, default=10)
 arg_parser.add_argument('--timeout', type=int, default=300)
@@ -32,15 +40,15 @@ arg_parser.add_argument('--ping-target', help='Target hostname for ping.')
 class MpdManager():
 
     def __init__(self, interval, timeout,
-                 host='localhost', port=6600, password=None,
+                 host=None, port=None, password=None,
                 redis_target=None, ping_target=None):
         self.redis_target = redis_target
         self.ping_target = ping_target
         self.interval = interval
         self.timeout = timeout
-        self.host = host
-        self.port = port
-        self.password = password
+        self.host = host or MPD_HOST
+        self.port = port or MPD_PORT
+        self.password = password or MPD_PASSWORD
         self.redis = redis.StrictRedis('sakura.lan', socket_timeout=2)
         self.logger = logging.getLogger('MpdManager')
 
@@ -106,7 +114,7 @@ class MpdManager():
             self.mpd.command_list_ok_begin()
             self.mpd.clear()
             self.mpd.setvol(70)
-            self.mpd.load('streaming')
+            self.mpd.load('home')
             self.mpd.play()
             self.mpd.command_list_end()
 

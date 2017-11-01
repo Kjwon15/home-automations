@@ -67,6 +67,8 @@ import tempfile
 import time
 import traceback
 
+from mpd_env import MPD_HOST, MPD_PORT, MPD_PASSWORD
+
 # This is used for testing purposes
 PASSIVE_MODE = False
 
@@ -123,21 +125,9 @@ def connect_mpd():
     """Connect to mpd.
     """
     client = mpd.MPDClient()
-    mpd_passwd = 'derkuchen'
-    mpd_host = os.getenv('MPD_HOST')
-    if mpd_host is None:
-        mpd_host = 'localhost'
-    else:
-        splithost = mpd_host.split('@')
-        if len(splithost) > 1:
-            mpd_passwd = splithost[0]
-            mpd_host = splithost[1]
-    mpd_port = os.getenv('MPD_PORT')
-    if mpd_port is None:
-        mpd_port = 6600
-    client.connect(mpd_host, mpd_port)
-    if mpd_passwd is not None:
-        client.password(mpd_passwd)
+    client.connect(MPD_HOST, MPD_PORT)
+    if MPD_PASSWORD is not None:
+        client.password(MPD_PASSWORD)
     logging.debug("MPD version: %s" % client.mpd_version)
     #logging.debug("client.commands(): %s" % client.commands())
     return client
