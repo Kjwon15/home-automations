@@ -1,15 +1,15 @@
 import datetime
 import functools
 import hashlib
+from multiprocessing.pool import Pool
 import os
+from os import path
 import subprocess
 import time
-from os import path
-from multiprocessing.pool import Pool
 
 import appdirs
+from flask import Flask, request
 import requests
-from flask import Flask, request, jsonify
 
 API_URL = 'https://api.voicerss.org/'
 API_KEY = '80b6bc3bffb3432caf35b54b5078e2e3'
@@ -51,7 +51,7 @@ def speak(msg, lang='en-us', rate=0):
         hashlib.md5('{msg}:{lang}:{rate}'.format(
             msg=msg, lang=lang, rate=rate).encode('utf-8')).hexdigest())
     if is_valid(filename):
-        subprocess.Popen(['mpg321', '-q', '-g120', filename])#.wait()
+        subprocess.Popen(['mpg321', '-q', '-g120', filename])
     else:
         try:
             resp = requests.post(API_URL, {
@@ -69,7 +69,7 @@ def speak(msg, lang='en-us', rate=0):
             print(e)
         else:
             print(msg)
-            subprocess.Popen(['mpg321', '-q', '-g120', filename])#.wait()
+            subprocess.Popen(['mpg321', '-q', '-g120', filename])
 
 
 @app.route('/tts', methods=['POST'])

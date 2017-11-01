@@ -1,19 +1,16 @@
 import hashlib
-import colorthief
-import mpd
-import os
-import re
-import requests
-
 from io import BytesIO
 from xml.etree import ElementTree
 
-import sys
-from os import path
+import colorthief
+import mpd
+import requests
 
+
+from os import path
+import sys
 p = path.abspath(path.join(path.dirname(__file__), path.pardir))
 sys.path.append(p)
-
 from mpd_env import MPD_HOST, MPD_PORT, MPD_PASSWORD
 
 
@@ -108,16 +105,14 @@ class Listener():
 
         txt = next(
             (song.get(x)
-             for x in ('album', 'artist', 'title')
-             if x in song
-            ))
+                for x in ('album', 'artist', 'title')
+                if x in song))
         return hashlib.md5(txt.encode('utf-8')).hexdigest()[:6]
 
     def _is_rgb_mode(self):
         resp = light_session.get(self.light_host + '/status')
         mode = resp.json()['mode']
         return mode == 1
-
 
 
 if __name__ == '__main__':

@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 
-import os
-import sched
-import sys
-import socket
-import time
 import logging
 import logging.config
+import os
+import sched
+import socket
+import time
 
 import requests
 
-from mpd_env import MPD_HOST, MPD_PORT, MPD_PASSWORD
+from .mpd_env import MPD_HOST, MPD_PORT, MPD_PASSWORD
 
 session = requests.session()
 session.headers.update({
@@ -91,7 +90,6 @@ def do_light_stuff():
     scheduler = sched.scheduler(time.time, time.sleep)
     steps = DURATION // INTERVAL
 
-
     def set_light(**kwargs):
         logger.info('Set light {}'.format(kwargs))
         session.post(
@@ -99,10 +97,8 @@ def do_light_stuff():
             data=kwargs
         )
 
-
     def turn_off_yeelight():
         session.delete(YEELIGHT_HOST + '/switch')
-
 
     for step in range(steps):
         temp = int(MIN_TEMP + ((MAX_TEMP - MIN_TEMP) * (step / steps)))
@@ -115,10 +111,10 @@ def do_light_stuff():
 
     scheduler.run()
 
+
 if __name__ == '__main__':
 
     load_playlist()
     do_light_stuff()
     turn_on_light()
     logger.info('done')
-

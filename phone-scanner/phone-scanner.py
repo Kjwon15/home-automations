@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 import argparse
-import time
 import logging
+from logging.handlers import RotatingFileHandler
+import subprocess
+import time
+
+from mpd import MPDClient
 import redis
 import requests
-import socket
-import subprocess
-from logging.handlers import RotatingFileHandler
 
-from mpd import MPDClient, ConnectionError
 
-import sys
 from os import path
+import sys
 
 p = path.abspath(path.join(path.dirname(__file__), path.pardir))
 sys.path.append(p)
@@ -36,12 +36,11 @@ arg_parser.add_argument('--redis-target', help='Target key for wifi-monitor.')
 arg_parser.add_argument('--ping-target', help='Target hostname for ping.')
 
 
-
 class MpdManager():
 
     def __init__(self, interval, timeout,
                  host=None, port=None, password=None,
-                redis_target=None, ping_target=None):
+                 redis_target=None, ping_target=None):
         self.redis_target = redis_target
         self.ping_target = ping_target
         self.interval = interval
@@ -179,14 +178,15 @@ if __name__ == '__main__':
         datefmt='%y-%m-%d %H:%M:%S',
         format='%(asctime)s:%(levelname)s: %(message)s')
 
+    logger = logging.getLogger('MpdManager')
+
     if args.log_file:
         handler = RotatingFileHandler(args.log_file)
-        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+        formatter = logging.Formatter(
+            '%(asctime)s [%(levelname)s] %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-
-    logger = logging.getLogger('MpdManager')
     logger.setLevel(logging.DEBUG if args.verbose else logging.INFO)
 
     manager = MpdManager(args.interval, args.timeout,
