@@ -9,7 +9,7 @@ import time
 
 import requests
 
-from .mpd_env import MPD_HOST, MPD_PORT, MPD_PASSWORD
+from mpd_env import MPD_HOST, MPD_PORT, MPD_PASSWORD
 
 session = requests.session()
 session.headers.update({
@@ -86,19 +86,19 @@ def load_playlist():
 def do_light_stuff():
     # Light time!
     logger.info('yeelight time')
-    session.put(YEELIGHT_HOST + '/switch')
+    session.put(YEELIGHT_HOST + 'switch')
     scheduler = sched.scheduler(time.time, time.sleep)
     steps = DURATION // INTERVAL
 
     def set_light(**kwargs):
         logger.info('Set light {}'.format(kwargs))
         session.post(
-            YEELIGHT_HOST + '/light',
+            YEELIGHT_HOST + 'light',
             data=kwargs
         )
 
     def turn_off_yeelight():
-        session.delete(YEELIGHT_HOST + '/switch')
+        session.delete(YEELIGHT_HOST + 'switch')
 
     for step in range(steps):
         temp = int(MIN_TEMP + ((MAX_TEMP - MIN_TEMP) * (step / steps)))
