@@ -75,7 +75,7 @@ def load_playlist():
         b'clear\n'
         b'load alarm\n'
         b'consume 1\n'
-        b'play\n'
+        b'play 0\n'
         b'command_list_end\n'
         b'close\n'
     )
