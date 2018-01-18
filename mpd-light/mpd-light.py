@@ -1,4 +1,7 @@
 import hashlib
+import logging
+import logging.config
+
 from io import BytesIO
 from xml.etree import ElementTree
 
@@ -19,6 +22,8 @@ light_session.headers.update({
     'User-Agent': 'mpd-light',
 })
 
+logger = logging.getLogger('mpd-light')
+
 
 def get_lastfm_cover(song):
     url = 'http://ws.audioscrobbler.com/2.0/'
@@ -30,7 +35,7 @@ def get_lastfm_cover(song):
     if not any((artist, album)):
         return
 
-    print('{} - {}'.format(artist, album))
+    logger.info('{} - {}'.format(artist, album))
     resp = requests.get(url, {
         'method': 'album.getInfo',
         'artist': artist,
@@ -38,9 +43,12 @@ def get_lastfm_cover(song):
         'api_key': api_key
     })
 
-    tree = ElementTree.fromstring(resp.content)
-
-    return tree.find('album').findall('image')[-1].text
+    try:
+        tree = ElementTree.fromstring(resp.content)
+        return tree.find('album').findall('image')[-1].text
+    except Exception as e:
+        logger.error('Failed to get album cover: {}'.format(e))
+        return
 
 
 class Listener():
@@ -66,7 +74,7 @@ class Listener():
             try:
                 song = self.client.currentsong()
                 if song != last_song:
-                    print('{artist} - {album} / {title}'.format(
+                    logger.info('{artist} - {album} / {title}'.format(
                         artist=song.get('artist'),
                         album=song.get('album'),
                         title=song.get('title'),
@@ -74,7 +82,7 @@ class Listener():
                     color = self.get_color_code(song)
                     self.change_color(color)
             except Exception as e:
-                print(str(e))
+                logger.error(str(e))
                 color = 'c0ffee'
                 self.change_color(color)
 
@@ -82,9 +90,9 @@ class Listener():
 
     def change_color(self, color):
         if not self._is_rgb_mode():
-            print('Not in rgb mode, skipping')
+            logger.info('Not in rgb mode, skipping')
             return
-        print(color)
+        logger.info('Set color: {}'.format(color))
         light_session.post(self.light_host + "/light", {
             'rgb': color
         })
@@ -94,13 +102,13 @@ class Listener():
         try:
             img_url = get_lastfm_cover(song)
             if img_url:
-                print(img_url)
+                logger.info(img_url)
                 resp = requests.get(img_url)
                 file = BytesIO(resp.content)
                 ct = colorthief.ColorThief(file)
                 return '{:02x}{:02x}{:02x}'.format(*ct.get_color())
         except Exception as e:
-            print('Failed to get cover {}'.format(str(e)))
+            logger.error('Failed to get cover {}'.format(str(e)))
             pass
 
         txt = next(
@@ -115,7 +123,39 @@ class Listener():
         return mode == 1
 
 
+def set_logging():
+    logging.config.dictConfig({
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'brief': {
+                'format': '%(asctime)s:%(name)s:%(levelname)s:%(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%S %z',
+            }
+        },
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'brief',
+                'level': 'DEBUG',
+            }
+        },
+        'loggers': {
+            'mpd-light': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+                'propagate': False,
+            },
+        },
+        'root': {
+            'level': 'WARNING',
+            'handlers': ['console'],
+        },
+    })
+
+
 if __name__ == '__main__':
+    set_logging()
     listener = Listener(host=MPD_HOST, port=MPD_PORT, password=MPD_PASSWORD,
                         light_host='http://tsubaki.lan:31337')
 
