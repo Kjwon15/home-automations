@@ -113,7 +113,7 @@ class MpdManager():
             self.mpd.command_list_ok_begin()
             self.mpd.clear()
             self.mpd.setvol(70)
-            self.mpd.load('home')
+            self.mpd.load('latest')
             self.mpd.play()
             self.mpd.command_list_end()
 

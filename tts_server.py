@@ -65,6 +65,6 @@ def tts():
             print(e, file=sys.stderr)
             return str(e)
 
-    subprocess.Popen(['mpg321', '-q', filename]).wait()
+    subprocess.Popen(['mpg321', '-q', '-g120', filename]).wait()
 
     return 'OK'
