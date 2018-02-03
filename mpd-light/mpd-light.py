@@ -81,6 +81,7 @@ class Listener():
                     ))
                     color = self.get_color_code(song)
                     self.change_color(color)
+                    last_song = song
             except Exception as e:
                 logger.error(str(e))
                 color = 'c0ffee'
