@@ -20,7 +20,7 @@ MAIN_LIGHT_SWITCH = 'http://omega2.lan:8000/switch/0'
 YEELIGHT_HOST = 'http://tsubaki.lan:31337/'
 
 MIN_TEMP = 1700
-MAX_TEMP = 6500
+MAX_TEMP = 4500  # 6500 isn't pretty
 
 DURATION = 60 * 3 + 46 - 20
 INTERVAL = 10
@@ -125,7 +125,7 @@ def do_light_stuff():
 
     for step in range(steps):
         temp = int(MIN_TEMP + ((MAX_TEMP - MIN_TEMP) * (step / steps)))
-        brightness = int(100 * step / steps) or 1
+        brightness = int(1 + 99 * step / steps)
         scheduler.enter(step * INTERVAL, 1, set_light, kwargs={
             'temp': temp,
             'brightness': brightness,
