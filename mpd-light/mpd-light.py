@@ -94,6 +94,10 @@ class Listener():
             logger.info('Not in rgb mode, skipping')
             return
         logger.info('Set color: {}'.format(color))
+        # Devide red by 2 to calibrate.
+        r = int(color[:2], 16) // 2
+        color = '{:02x}{}'.format(r, color[2:])
+        logger.info('Set calibrated color: {}'.format(color))
         light_session.post(self.light_host + "/light", {
             'rgb': color
         })
