@@ -7,6 +7,12 @@ if [ -e /tmp/snooze ]; then
     exit
 fi
 
-./check_phone.py || exit 1
+if ! ./check_phone.py; then
+    echo "Phone is not alive"
+    exit 1
+fi
+
+# Ping to light service
+curl -XGET http://tsubaki.lan:31337/light > /dev/null
 
 ./alarm.py
