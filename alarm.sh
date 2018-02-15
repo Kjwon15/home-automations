@@ -13,6 +13,6 @@ if ! ./check_phone.py; then
 fi
 
 # Ping to light service
-curl -XGET http://tsubaki.lan:31337/light > /dev/null
+curl -qs -XGET http://tsubaki.lan:31337/light > /dev/null
 
 ./alarm.py
