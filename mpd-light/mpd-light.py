@@ -90,17 +90,26 @@ class Listener():
             self.client.idle('player', 'playlist')
 
     def change_color(self, color):
-        if not self._is_rgb_mode():
-            logger.info('Not in rgb mode, skipping')
-            return
-        logger.info('Set color: {}'.format(color))
-        # Devide red by 2 to calibrate.
-        r = int(color[:2], 16) // 2
-        color = '{:02x}{}'.format(r, color[2:])
-        logger.info('Set calibrated color: {}'.format(color))
-        light_session.post(self.light_host + "/light", {
-            'rgb': color
-        })
+        for retry in range(3):
+            try:
+                if not self._is_rgb_mode():
+                    logger.info('Not in rgb mode, skipping')
+                    return
+                logger.info('Set color: {}'.format(color))
+                # Devide red by 2 to calibrate.
+                r = int(color[:2], 16) // 2
+                color = '{:02x}{}'.format(r, color[2:])
+                logger.info('Set calibrated color: {}'.format(color))
+                light_session.post(self.light_host + "/light", {
+                    'rgb': color
+                })
+            except Exception as e:
+                logger.error(e)
+            else:
+                break
+        else:
+            logger.error('Max try count reached')
+            exit(1)
 
     @staticmethod
     def get_color_code(song):
