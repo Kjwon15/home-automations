@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import os
 from os import path
+import random
 import subprocess
 import sys
 import time
@@ -22,6 +23,17 @@ audio_output = audio.open(
     output=True)
 
 polly = client('polly', region_name='ap-northeast-2')
+
+voice_map = {
+    ('en-US', 'female'): {'Ivy', 'Joanna', 'Kendra', 'Kimberly', 'Sali'},
+    ('en-US', 'male'): {'Joey', 'Justin', 'Matthew'},
+    ('en-GB', 'female'): {'Amy', 'Emma'},
+    ('en-GB', 'male'): {'Brian'},
+    ('ko-KR', 'female'): {'Seoyeon'},
+    ('ko-KR', 'male'): set(),
+    ('ja-JP', 'female'): {'Mizuki'},
+    ('ja-JP', 'male'): {'Takumi'},
+}
 
 cache_dir = appdirs.user_cache_dir('tts_server', 'kjwon15')
 if not path.exists(cache_dir):
@@ -47,6 +59,20 @@ def get_param(name):
 def tts():
     msg = get_param('msg')
     voice_id = get_param('voiceid')
+
+    if voice_id is None:
+        lang = get_param('lang')
+        gender = get_param('gender')
+
+        if gender:
+            voice_id = random.choice(list(
+                voice_map[(lang, gender)]
+            ))
+        else:
+            voice_id = random.choice(list(
+                voice_map[(lang, 'female')] |
+                voice_map[(lang, 'male')]
+            ))
 
     filename = path.join(
         cache_dir,
