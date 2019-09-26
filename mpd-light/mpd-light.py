@@ -171,6 +171,6 @@ def set_logging():
 if __name__ == '__main__':
     set_logging()
     listener = Listener(host=MPD_HOST, port=MPD_PORT, password=MPD_PASSWORD,
-                        light_host='http://tsubaki.lan:31337')
+                        light_host='http://sakura.lan:31337')
 
     listener.start()
