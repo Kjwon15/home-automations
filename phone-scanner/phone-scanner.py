@@ -1,22 +1,21 @@
 #!/usr/bin/env python
 import argparse
-import logging
-from logging.handlers import RotatingFileHandler
-import subprocess
 import time
-
-from mpd import MPDClient
+import logging
 import redis
 import requests
+import socket
+import subprocess
+from logging.handlers import RotatingFileHandler
 
+from mpd import MPDClient, ConnectionError
 
-from os import path
 import sys
+sys.path.insert(1, '..')
+import mpd_env  # noqa
 
-p = path.abspath(path.join(path.dirname(__file__), path.pardir))
-sys.path.append(p)
-
-from mpd_env import MPD_HOST, MPD_PORT, MPD_PASSWORD
+MAIN_SWITCH = 'http://omega2.lan:8000/switch/0'
+SUB_SWITCH = 'http://sakura.lan:31337/switch'
 
 try:
     from subprocess import DEVNULL
@@ -25,11 +24,9 @@ except ImportError:
     DEVNULL = open(os.devnull, 'wb')
 
 arg_parser = argparse.ArgumentParser()
-arg_parser.add_argument('--mpd-host', default=None)
-arg_parser.add_argument('--mpd-port', type=int, default=None)
-arg_parser.add_argument('--mpd-password')
 arg_parser.add_argument('--interval', type=int, default=10)
 arg_parser.add_argument('--timeout', type=int, default=300)
+arg_parser.add_argument('--gap', type=int, default=(4 * 60 * 60))
 arg_parser.add_argument('-v', '--verbose', action='store_true')
 arg_parser.add_argument('-l', '--log-file', help='Log file')
 arg_parser.add_argument('--redis-target', help='Target key for wifi-monitor.')
@@ -38,18 +35,20 @@ arg_parser.add_argument('--ping-target', help='Target hostname for ping.')
 
 class MpdManager():
 
-    def __init__(self, interval, timeout,
-                 host=None, port=None, password=None,
+    def __init__(self, interval, timeout, gap,
+                 host='localhost', port=6600, password=None,
                  redis_target=None, ping_target=None):
         self.redis_target = redis_target
         self.ping_target = ping_target
         self.interval = interval
         self.timeout = timeout
-        self.host = host or MPD_HOST
-        self.port = port or MPD_PORT
-        self.password = password or MPD_PASSWORD
-        self.redis = redis.StrictRedis('sakura.lan', socket_timeout=2)
+        self.gap = gap
+        self.host = host
+        self.port = port
+        self.password = password
+        self.redis = redis.StrictRedis()
         self.logger = logging.getLogger('MpdManager')
+        self.is_mpd_on = False
 
         self.prev_on = True
         self.last_on = time.time()
@@ -59,14 +58,21 @@ class MpdManager():
     def connect(self):
         self.logger.info('Connecting MPD')
         self.mpd = MPDClient()
-        self.mpd.connect(self.host, self.port)
-        if self.password:
-            self.mpd.password(self.password)
+        try:
+            self.mpd.connect(self.host, self.port)
+            if self.password:
+                self.mpd.password(self.password)
+            self.is_mpd_on = True
+        except Exception as e:
+            self.logger.debug(e)
+            raise e
+            self.logger.info('MPD disabled')
+            self.is_mpd_on = False
 
     def check_mpd_connection(self):
         try:
             self.mpd.ping()
-        except:
+        except ConnectionError:
             self.connect()
 
     def run(self):
@@ -82,7 +88,7 @@ class MpdManager():
 
             difference = now - last_seen
 
-            self.logger.debug('{}, {}'.format(
+            self.logger.debug('Last seen: {} diff: {}'.format(
                 last_seen,
                 difference))
 
@@ -90,9 +96,10 @@ class MpdManager():
                 if not self.prev_on:
                     self.on_connected()
                     self.prev_on = True
-            elif self.prev_on:
-                self.on_disconnected()
-                self.prev_on = False
+            else:
+                if self.prev_on:
+                    self.on_disconnected()
+                    self.prev_on = False
 
             if last_seen:
                 self.last_on = last_seen
@@ -100,46 +107,41 @@ class MpdManager():
             time.sleep(self.interval)
 
     def on_connected(self):
-        self.check_mpd_connection()
+        self.logger.info('Connected')
 
-        if self.mpd.status()['state'] == 'play':
-            return
+        if self.is_mpd_on:
+            self.check_mpd_connection()
 
-        if (time.time() - self.last_on) <= (4 * 60 * 60):
-            self.logger.info('Start music')
-            self.mpd.play()
-        else:
-            self.logger.info('Clear and start music')
-            self.mpd.command_list_ok_begin()
-            self.mpd.clear()
-            self.mpd.setvol(70)
-            self.mpd.load('latest')
-            self.mpd.play()
-            self.mpd.command_list_end()
-
-        try:
-            requests.put('http://omega2.lan:8000/switch/0', timeout=3)
-        except:
-            pass
-
-    def on_disconnected(self):
-        self.check_mpd_connection()
-
-        if self.mpd.status()['state'] == 'play':
-            self.logger.info('Stop music')
-            self.mpd.stop()
+            if (time.time() - self.last_on) <= self.gap:
+                self.logger.info('Start music')
+                self.mpd.play()
+            else:
+                self.logger.info('Over gap')
+                self.mpd.command_list_ok_begin()
+                self.mpd.clear()
+                self.mpd.setvol(70)
+                self.mpd.load('latest')
+                self.mpd.play()
+                self.mpd.command_list_end()
 
         try:
-            requests.post('http://tsubaki.lan:31337/switch',
-                          {'switch': 'off'},
-                          timeout=3)
+            requests.put(MAIN_SWITCH)
         except Exception as e:
             self.logger.error(str(e))
 
-        try:
-            requests.delete('http://omega2.lan:8000/switch/0', timeout=3)
-        except:
-            pass
+    def on_disconnected(self):
+        self.logger.info('Disconnected')
+
+        if self.is_mpd_on:
+            self.check_mpd_connection()
+            self.logger.info('Stop music')
+            self.mpd.stop()
+
+        for switch in (MAIN_SWITCH, SUB_SWITCH):
+            try:
+                requests.delete(switch)
+            except Exception as e:
+                self.logger.error(str(e))
 
     def check_alive_ping(self):
         p = subprocess.Popen(['ping', '-c1', '-W1', self.ping_target],
@@ -159,16 +161,13 @@ class MpdManager():
             # subprocess.Popen(['ping', '-c1', '-W1', self.ping_target],
             #                  stdout=DEVNULL,
             #                  stderr=DEVNULL)
-            try:
-                last_seen = self.redis.hget(self.redis_target, 'lastseen')
-                if last_seen:
-                    last_seen = float(last_seen)
-                    self.logger.debug('Redis {}'.format(last_seen))
-                    return last_seen
-            except:
-                pass
-
-            return None
+            last_seen = self.redis.hget(self.redis_target, 'lastseen')
+            if last_seen:
+                last_seen = float(last_seen)
+                self.logger.debug('Redis {}'.format(last_seen))
+                return last_seen
+            else:
+                return None
 
 
 if __name__ == '__main__':
@@ -178,19 +177,20 @@ if __name__ == '__main__':
         datefmt='%y-%m-%d %H:%M:%S',
         format='%(asctime)s:%(levelname)s: %(message)s')
 
-    logger = logging.getLogger('MpdManager')
-
     if args.log_file:
         handler = RotatingFileHandler(args.log_file)
-        formatter = logging.Formatter(
-            '%(asctime)s [%(levelname)s] %(message)s')
+        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
+
+    logger = logging.getLogger('MpdManager')
     logger.setLevel(logging.DEBUG if args.verbose else logging.INFO)
 
-    manager = MpdManager(args.interval, args.timeout,
-                         args.mpd_host, args.mpd_port, args.mpd_password,
+    logger.info(f'Using {mpd_env.MPD_HOST} {mpd_env.MPD_PORT} {mpd_env.MPD_PASSWORD}')
+
+    manager = MpdManager(args.interval, args.timeout, args.gap,
+                         mpd_env.MPD_HOST, mpd_env.MPD_PORT, mpd_env.MPD_PASSWORD,
                          redis_target=args.redis_target,
                          ping_target=args.ping_target)
     manager.run()

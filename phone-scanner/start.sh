@@ -2,4 +2,14 @@
 
 BASEDIR="$(dirname $0)"
 
-exec python ${BASEDIR}/phone-scanner.py --ping-target=n5x.lan --redis-target=kjwon15 --timeout 600
+if [ -d $HOME/.pyenv/bin ]; then
+    export PATH="/home/kjwon15/.pyenv/bin:$PATH"
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
+fi
+
+export PYENV_VERSION="home-auto"
+
+cd "$BASEDIR"
+
+exec python ${BASEDIR}/phone-scanner.py --ping-target=pixel2.lan --redis-target=kjwon15 $@
