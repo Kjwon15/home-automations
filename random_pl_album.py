@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 #    This script picks a random album from the MPD playlist.
 #    Copyright (C) 2009  Kyle MacLeod  kyle.macleod is at gmail
