@@ -2,6 +2,8 @@
 path=`dirname $(readlink -e $0)`
 cd $path
 
+eval "$(~/.pyenv/bin/pyenv init -)"
+
 if [ -e /tmp/snooze ]; then
     rm /tmp/snooze
     exit

@@ -17,7 +17,8 @@ session.headers.update({
 })
 
 MAIN_LIGHT_SWITCH = 'http://omega2.lan:8000/switch/0'
-YEELIGHT_HOST = 'http://tsubaki.lan:31337/'
+YEELIGHT_HOST = 'http://sakura.lan:31337/'
+TTS_HOST = 'http://sakura.lan:1775/'
 
 MIN_TEMP = 1700
 MAX_TEMP = 4500  # 6500 isn't pretty
@@ -65,22 +66,26 @@ def turn_on_light():
 def load_playlist():
     logger.info('Load playlist')
     sock = socket.socket()
-    sock.connect((MPD_HOST, MPD_PORT))
-    if MPD_PASSWORD:
-        sock.send('password {}\n'.format(MPD_PASSWORD).encode())
+    try:
+        sock.connect((MPD_HOST, MPD_PORT))
+        if MPD_PASSWORD:
+            sock.send('password {}\n'.format(MPD_PASSWORD).encode())
 
-    sock.send(
-        b'command_list_begin\n'
-        b'setvol 70\n'
-        b'clear\n'
-        b'load alarm\n'
-        b'consume 1\n'
-        b'play 0\n'
-        b'command_list_end\n'
-        b'close\n'
-    )
-    logger.debug(sock.recv(4096).decode())
-    sock.close()
+        sock.send(
+            b'command_list_begin\n'
+            b'setvol 70\n'
+            b'clear\n'
+            b'load alarm\n'
+            b'consume 1\n'
+            b'play 0\n'
+            b'command_list_end\n'
+            b'close\n'
+        )
+        logger.debug(sock.recv(4096).decode())
+    except:
+        logger.warning('Failed to connect to MPD')
+    finally:
+        sock.close()
 
 
 def do_light_stuff():
@@ -159,7 +164,7 @@ def forecast():
             " and lowest temperature is {low} degrees."
         ).format(text=forecast['text'], high=forecast['high'], low=forecast['low'])
         session.post(
-            'http://tsubaki.lan:1775/tts', {
+            f'{TTS_HOST}tts', {
                 'msg': msg,
                 'voiceid': 'Amy',
             }
@@ -174,5 +179,5 @@ if __name__ == '__main__':
     load_playlist()
     do_light_stuff()
     turn_on_light()
-    forecast()
+    # forecast()
     logger.info('done')
