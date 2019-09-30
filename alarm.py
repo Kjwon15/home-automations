@@ -63,7 +63,7 @@ def turn_on_light():
     session.put(MAIN_LIGHT_SWITCH)
 
 
-def load_playlist():
+def load_playlist(name, clear=False):
     logger.info('Load playlist')
     sock = socket.socket()
     try:
@@ -71,19 +71,22 @@ def load_playlist():
         if MPD_PASSWORD:
             sock.send('password {}\n'.format(MPD_PASSWORD).encode())
 
-        sock.send(
-            b'command_list_begin\n'
-            b'setvol 70\n'
-            b'clear\n'
-            b'load alarm\n'
-            b'consume 1\n'
-            b'play 0\n'
-            b'command_list_end\n'
-            b'close\n'
+        sock.send((
+            'command_list_begin\n'
+            + ((
+                'setvol 70\n'
+                'clear\n'
+            ) if clear else '') +
+            f'load {name}\n'
+            'consume 1\n'
+            'play 0\n'
+            'command_list_end\n'
+            'close\n'
+            ).encode('utf-8')
         )
         logger.debug(sock.recv(4096).decode())
-    except:
-        logger.warning('Failed to connect to MPD')
+    except Exception as e:
+        logger.warning(f'Failed to connect to MPD: {e}')
     finally:
         sock.close()
 
@@ -176,8 +179,9 @@ def forecast():
 
 if __name__ == '__main__':
 
-    load_playlist()
+    load_playlist('alarm', clear=True)
     do_light_stuff()
     turn_on_light()
     # forecast()
+    load_playlist('morning')
     logger.info('done')
