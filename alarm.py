@@ -79,7 +79,9 @@ def load_playlist(name, clear=False):
             ) if clear else '') +
             f'load {name}\n'
             'consume 1\n'
-            'play 0\n'
+            + (
+                'play 0\n'
+                if clear else '') +
             'command_list_end\n'
             'close\n'
             ).encode('utf-8')
