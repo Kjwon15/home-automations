@@ -83,7 +83,7 @@ def tts():
         try:
             response = polly.synthesize_speech(
                 Text=msg,
-                OutputFormat='mp3',
+                OutputFormat='ogg_vorbis',
                 VoiceId=voice_id)
             with open(filename, 'wb') as fp:
                 fp.write(response['AudioStream'].read())
@@ -91,6 +91,6 @@ def tts():
             print(e, file=sys.stderr)
             return str(e)
 
-    subprocess.Popen(['mpg321', '-q', '-g120', filename]).wait()
+    subprocess.Popen(['ogg123', '-q', filename]).wait()
 
     return 'OK'
