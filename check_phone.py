@@ -24,7 +24,7 @@ except Exception as e:
     print("Redis check failed: {}".format(e), file=sys.stderr)
 
 p = subprocess.Popen(
-    ['ping', '-c1', '-W1', 'n5x.lan'],
+    ['ping', '-c1', '-W1', 'pixel2.lan'],
     stdout=DEVNULL,
     stderr=DEVNULL)
 
