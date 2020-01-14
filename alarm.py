@@ -74,7 +74,7 @@ def load_playlist(name, clear=False):
         sock.send((
             'command_list_begin\n'
             + ((
-                'setvol 70\n'
+                'setvol 80\n'
                 'clear\n'
             ) if clear else '') +
             f'load {name}\n'
@@ -146,37 +146,37 @@ def do_light_stuff():
 
 
 def forecast():
-    logger.info('forecast')
-    try:
-        resp = session.get(
-            'https://query.yahooapis.com/v1/public/yql', params={
-                'format': 'json',
-                'q': ("select item.forecast from weather.forecast(1) where u='c' and"
-                      " woeid in (select woeid from geo.places(1) where text = 'daejeon')"),
-            }
-        )
-
-        forecast = resp.json()['query']['results']['channel']['item']['forecast']
-    except Exception as e:
-        print(resp.json())
-        logger.error('Failed to get forecast: {}'.format(e))
-        return
+    def format_temp(temp):
+        if temp < 0:
+            value = abs(temp)
+            return f'영하 {value:.1f}'
+        return f'{temp:.1f}'
 
     try:
+        data = requests.get(
+                'https://api.darksky.net/forecast/f9ea8e29d0209855ff9e675cedc2e885/'
+                '37.5413512,127.0873911?units=si'
+        ).json()
+        todays = data['daily']['data'][0]
+        summary = todays['summary']
+        temp_cur = data['currently']['temperature']
+        temp_max = todays['temperatureMax']
+        temp_min = todays['temperatureMin']
+
         msg = (
-            "Today's forecast is {text}."
-            " Highest temperature is {high} degrees"
-            " and lowest temperature is {low} degrees."
-        ).format(text=forecast['text'], high=forecast['high'], low=forecast['low'])
-        session.post(
-            f'{TTS_HOST}tts', {
+            f"Today's forecast is {summary}\n"
+            f'The highest temperature is {temp_max:.1f} '
+            f'and the lowest is  {temp_min:.1f}, '
+            f'Currently {temp_cur:.1f} degrees celsius.')
+
+        requests.post(
+            'http://sakura.lan:1775/tts', json={
                 'msg': msg,
                 'voiceid': 'Amy',
             }
         )
     except Exception as e:
-        logger.error('Failed to request TTS: {}'.format(e))
-        return
+        logger.error('Failed to forecast {}'.format(e))
 
 
 if __name__ == '__main__':
@@ -184,6 +184,6 @@ if __name__ == '__main__':
     load_playlist('alarm', clear=True)
     do_light_stuff()
     turn_on_light()
-    # forecast()
+    forecast()
     load_playlist('morning')
     logger.info('done')
